@@ -5,5 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "opencv-python>=4.13.0.92",
     "pyrealsense2>=2.57.7.10387",
+    "rerun-sdk>=0.30.2",
 ]
+
+[dependency-groups]
+dev = [
+    "pybind11-stubgen>=2.5.5",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12"]
+build-backend = "uv_build"
