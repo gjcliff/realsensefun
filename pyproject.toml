@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "opencv-python>=4.13.0.92",
+    "opencv-contrib-python>=4.8",
     "pyrealsense2>=2.57.7.10387",
     "rerun-sdk>=0.30.2",
 ]
