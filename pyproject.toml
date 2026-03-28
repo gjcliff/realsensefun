@@ -1,0 +1,9 @@
+[project]
+name = "realsensefun"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyrealsense2>=2.57.7.10387",
+]
