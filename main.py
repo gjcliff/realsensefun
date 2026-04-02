@@ -1,13 +1,11 @@
-import pyrealsense2 as rs
 import cv2
 import numpy as np
 
-from realsensefun.realsense import RealSenseD435i, CameraConfig, CameraPreset
+from realsensefun.aruco import ArucoHelper
+from realsensefun.realsense import CameraConfig, CameraPreset, RealSenseD435i
 
 
-def resize_images(
-    depth_image: np.ndarray, color_image: np.ndarray
-) -> np.ndarray:
+def resize_images(depth_image: np.ndarray, color_image: np.ndarray) -> np.ndarray:
     depth_colormap = cv2.applyColorMap(
         cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET
     )
@@ -35,26 +33,56 @@ def main():
         emitter_enabled=False,
     )
 
+    helper = ArucoHelper(
+        squares_x=7,
+        squares_y=5,
+        square_length=0.032,
+        marker_length=0.0237,
+        dictionary=cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250),
+    )
+
     with RealSenseD435i(config) as cam:
         assert cam.pipeline is not None
         while True:
             frames = cam.pipeline.wait_for_frames()
-            # depth_frame = frames.get_depth_frame()
-            # color_frame = frames.get_color_frame()
             ir_frame = frames.get_infrared_frame()
-
-            # if not depth_frame:
-            #     continue
-            #
-            # if not color_frame:
-            #     continue
-            #
-            # depth_image = np.asanyarray(depth_frame.get_data())
-            # color_image = np.asanyarray(color_frame.get_data())
-
             ir_image = np.asanyarray(ir_frame.get_data())
-            cv2.imshow("ir_image", ir_image)
-            _ = cv2.waitKey(1)
+
+            display = ir_image.copy()
+
+            charuco_corners, charuco_ids, marker_corners, marker_ids = (
+                helper.detector.detectBoard(ir_image)
+            )
+
+            if marker_ids is not None:
+                cv2.aruco.drawDetectedMarkers(display, marker_corners, marker_ids)
+
+            if charuco_ids is not None:
+                cv2.aruco.drawDetectedCornersCharuco(
+                    display, charuco_corners, charuco_ids
+                )
+
+            _ = cv2.putText(
+                display,
+                f"frames: {len(helper._all_charuco_corners)}",
+                (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1.0,
+                255,
+                2,
+            )
+            cv2.imshow("ir_image", display)
+
+            key = cv2.waitKey(1)
+
+            if key == ord("c"):
+                accepted = helper.process_frame(ir_image)
+                print(
+                    f"{'accepted' if accepted else 'rejected'}  total: {len(helper._all_charuco_corners)}"
+                )
+
+            if key == ord("q"):
+                break
 
             # If depth and color resolutions are different, resize color image to match depth image for display
 
